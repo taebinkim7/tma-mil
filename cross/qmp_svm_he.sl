@@ -14,7 +14,7 @@ source ~/miniconda3/etc/profile.d/conda.sh
 
 conda activate tma
 
-python /datastore/lbcfs/labs/smarronlab/tkim/projects/ImageMIL/run_mi_classify.py \
+python /datastore/lbcfs/labs/smarronlab/tkim/projects/tma-mil/run_mi_classify.py \
 -o mil/he \
 -m vgg16 -l block4_pool --cat er --cv-folds 5 \
 --instance-size 800 --instance-stride 400 --mi quantile_mean_pca --n-components 16 \

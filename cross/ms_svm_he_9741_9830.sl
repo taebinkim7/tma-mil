@@ -15,7 +15,9 @@ conda activate tma
 
 python /datastore/lbcfs/labs/smarronlab/tkim/projects/tma-mil/run_cross_dataset.py \
 --train-dir /datastore/lbcfs/labs/smarronlab/tkim/data/tma_9741/mil/he \
---test-dir /datastore/lbcfs/labs/smarronlab/tkim/data/tma_cbcs/mil/he \
+--test-dir /datastore/lbcfs/labs/smarronlab/tkim/data/tma_9830/mil/he \
 -m vgg16 -l block4_pool --cat er --cv-folds 5 \
---instance-size 800 --instance-stride 400 --mi quantile \
+--train-instance-size 800 --train-instance-stride 200 \
+--test-instance-size 800 --test-instance-stride 400 \
+--mi quantile \
 --save-train --load-train --n-jobs 16

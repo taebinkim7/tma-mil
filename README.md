@@ -1,4 +1,4 @@
-# ImageMIL - Multiple Instance Learning on Large Images
+# tma-mil - Multiple Instance Learning on Large Images
 
 These methods were developed for classifying larger images with intra-image heterogeneity.  The class of each image is not dictated by some small to-be-identified region but by the overall appearance - perhaps the average class of smaller regions or some more complex relationship.
 

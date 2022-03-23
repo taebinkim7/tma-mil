@@ -178,7 +178,7 @@ if __name__ == '__main__':
         y_test = test_labels[idx_test, c]
 
         # load trained classifier
-        model_path = train_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_all'
+        model_path = train_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_all'train_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_i' + str(train_instance_size) + '-' + str(train_instance_stride)
         if load_train and os.path.exists(model_path):
             model = load(model_path)
         elif mi_type is None:

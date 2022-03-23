@@ -13,7 +13,7 @@ source ~/miniconda3/etc/profile.d/conda.sh
 
 conda activate tma
 
-python /datastore/lbcfs/labs/smarronlab/tkim/projects/ImageMIL/run_cross_dataset.py \
+python /datastore/lbcfs/labs/smarronlab/tkim/projects/tma-mil/run_cross_dataset.py \
 --train-dir /datastore/lbcfs/labs/smarronlab/tkim/data/tma_cbcs/mil/he \
 --test-dir /datastore/lbcfs/labs/smarronlab/tkim/data/tma_9741/mil/he \
 -m vgg16 -l block4_pool --cat er --cv-folds 5 \
