@@ -114,6 +114,9 @@ if __name__ == '__main__':
     if agg_type is None:
         agg_type = 'svm'
 
+    if quantiles is None:
+        quantiles = 16
+
     if save_train is None:
         save_train = False
     else:
