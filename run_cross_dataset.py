@@ -234,6 +234,8 @@ if __name__ == '__main__':
             model_path = train_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_i' + str(train_instance_size) + '-' + str(train_instance_stride) + '_q' + str(quantiles)
             dump(model, model_path)
 
-        print(f'Train instance size-stride: {train_instance_size}-{train_instance_stride}, Quantiles: {quantiles}')
+        print(f'Train instance size-stride: {train_instance_size}-{train_instance_stride}')
+        print(f'Test instance size-stride: {test_instance_size}-{test_instance_stride}')
+        print(f'Quantiles: {quantiles}')
         print('Cross-validation results')
         res.print_summary()
