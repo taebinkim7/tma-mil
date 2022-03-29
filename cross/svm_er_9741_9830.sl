@@ -20,4 +20,4 @@ python /datastore/lbcfs/labs/smarronlab/tkim/projects/tma-mil/run_cross_dataset.
 --train-instance-size 800 --train-instance-stride 200 \
 --test-instance-size 800 --test-instance-stride 400 \
 --mi quantile \
---save-train --load-train --n-jobs 4
+--save-train --load-train --n-jobs 8

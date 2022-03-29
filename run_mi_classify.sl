@@ -15,4 +15,4 @@ source ~/miniconda3/etc/profile.d/conda.sh
 conda activate mil
 
 python run_mi_classify.py -o /datastore/lbcfs/labs/smarronlab/tkim/data/tma_cbcs/mil -m vgg16 -l block4_pool \
---cat er --cv-folds 5 --instance-size 800 --instance-stride 400 --mi quantile --n-jobs 4
+--cat er --cv-folds 5 --instance-size 800 --instance-stride 400 --mi quantile --n-jobs 8
