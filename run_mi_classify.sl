@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=16G
 #SBATCH --time=14-0:00:00
-#SBATCH --partition=interactive
+#SBATCH --partition=allnodes
 #SBATCH --output=run-%j.log
 #SBATCH --mail-type=end
 #SBATCH --mail-user=taebinkim@unc.edu
