@@ -56,7 +56,7 @@ if __name__ == '__main__':
     parser.add_argument('--classifier', '-c', help='classifier (logistic, svm, dwd); default: svm')
     parser.add_argument('--kernel', help='SVM kernel; default: linear')
     parser.add_argument('--mi',
-                        help='MI type (none, median, quantile, quantile_mean, quantile_pca, quantile_mean_pca, quantile_opc); default: none (compute mean across images)')
+                        help='MI type (none, median, max, quantile, quantile_mean, quantile_pca, quantile_mean_pca, quantile_opc); default: none (compute mean across images)')
     parser.add_argument('--agg', help='Aggregate type (svm, dwd); default: svm')
     parser.add_argument('--quantiles', '-q', help='Number of quantiles; default: 16')
     parser.add_argument('--sample-weight', help='Weight samples by classification category and this one')
@@ -382,5 +382,6 @@ if __name__ == '__main__':
                     #     res.add('sensitivity '+group_name,float( np.logical_and(y_test[idx]==1, y_predict[idx]==y_test[idx]).sum() ) / (y_test[idx]==1).sum() )
                     #     res.add('specificity '+group_name,float( np.logical_and(y_test[idx]!=1, y_predict[idx]==y_test[idx]).sum() ) / (y_test[idx]!=1).sum() )
 
+        print(f'Instance size-stride: {instance_size}-{instance_stride}')
         print('Cross-validation results')
         res.print_summary()

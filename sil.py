@@ -198,7 +198,7 @@ class SIL(LinearClassifier):
                     q = np.percentile(pi[:, 1], quantiles)
                 else:
                     q = np.hstack([np.percentile(pi[:, c], quantiles) for c in range(pi.shape[1])])
-                if 'mean' in predict_type:
+                if 'quantile_mean' in predict_type:
                     q = np.concatenate([q, np.mean(bags[i], axis=0)])
                 if 'pca' in predict_type:
                     pc_scores = bags[i] @ self._pc_loadings.T
@@ -346,7 +346,6 @@ class SIL(LinearClassifier):
 
         return bestC,bestg
 
-# TODO: Add OPC
 def _inst_to_bag_preds(inst_preds, bags, predict_type='median', T=None, model_agg=None, pc_loadings=None, opc1=None, opc2=None):
     """Predict bag class from instance predictions."""
 
