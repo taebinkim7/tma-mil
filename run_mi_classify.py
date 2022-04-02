@@ -197,7 +197,6 @@ if __name__ == '__main__':
                 continue
             feats[sample].append(feat)
 
-        print('%s %d' % (sample, len(feats[sample])))
         feats[sample] = np.concatenate(feats[sample], axis=0)
         if len(feats[sample].shape) == 1:
             feats[sample] = feats[sample].reshape((1, len(feats[sample])))
@@ -247,8 +246,8 @@ if __name__ == '__main__':
         options['classifier'] = classifier
     if mi_type is not None:
         options['predict_type'] = mi_type
-    if agg_type is not None:
-        options['agg_type'] = agg_type
+        if agg_type is not None:
+            options['agg_type'] = agg_type
     if metric is not None:
         options['metric'] = metric
     if n_components is not None:
