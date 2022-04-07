@@ -71,13 +71,15 @@ if __name__ == '__main__':
     parser.add_argument('--n-components', help='number of principal components')
     args = parser.parse_args()
     train_dirs = args.train_dirs
-    for train_dir in train_dirs:
+    for i, train_dir in enumerate(train_dirs):
         if len(train_dir) > 1 and train_dir[-1] != '/':
             train_dir += '/'
+        train_dirs[i] = train_dir
     test_dirs = args.test_dirs
-    for test_dir in test_dirs:
+    for i, test_dir in enumerate(test_dirs):
         if len(test_dir) > 1 and test_dir[-1] != '/':
             test_dir += '/'
+        test_dirs[i] = test_dir
     model_name = args.model
     layer = args.layer
     instance_size = args.instance_size
