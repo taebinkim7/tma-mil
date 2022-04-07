@@ -27,7 +27,7 @@ def load_sample_images( out_dir ):
         line = line.split(',')
         samples[line[0]] = [ fn.strip() for fn in line[1:] if fn.strip() != '' ]
     return samples
-    
+
 def load_labels( out_dir ):
 
     samples = []
@@ -44,10 +44,10 @@ def load_labels( out_dir ):
     samples = d[1:,0]
     cats = d[0,1:]
     labels = d[1:,1:]
-    return samples,cats,labels
+    return list(samples),cats,labels
 
 def load_cv_files( out_dir, samples, cv_fold_files ):
-        
+
     cv_files = sorted(list(glob( out_dir + cv_fold_files )))
     idx_train_test = []
     for fn in cv_files:
@@ -61,7 +61,7 @@ def load_cv_files( out_dir, samples, cv_fold_files ):
         idx_test = np.array([ np.where(samples==name)[0] for name in name_test ]).flatten()
         idx_train_test.append( [idx_train,idx_test] )
     return idx_train_test
-        
+
 def load_feats(out_dir, sample_images, model_name, layer, pool_size, instance_size, instance_stride, mi_type):
     # read in CNN features
     feats = {}
@@ -122,3 +122,25 @@ def clean_cats_labels(cats, labels, categories):
         cats = categories
 
         return cats, labels, label_names
+
+def load_multi_data(dirs, model_name, layer, pool_size, instance_size, instance_stride, mi_type, categories):
+    multi_feats = {}
+    multi_sample_images = {}
+    multi_samples = []
+    multi_labels = None
+    for dir in dirs:
+        # load feats
+        sample_images = util.load_sample_images(dir)
+        feats = util.load_feats(dir, sample_images, model_name, layer, pool_size, instance_size, instance_stride, mi_type)
+        multi_feats.update(feats)
+        # load rest of data
+        samples, cats, labels = util.load_labels(dir)
+        cats, labels, label_names = util.clean_cats_labels(cats, labels, categories)
+        multi_sample_images.update(sample_images)
+        multi_samples += list(samples)
+        if multi_labels is None:
+            multi_labels = labels
+        else:
+            multi_labels = np.concatenate(multi_labels, labels], axis=0)
+
+    return multi_feats, multi_samples, cats, multi_labels, label_names
