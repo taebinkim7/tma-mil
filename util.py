@@ -130,12 +130,12 @@ def load_multi_data(dirs, model_name, layer, pool_size, instance_size, instance_
     multi_labels = None
     for dir in dirs:
         # load feats
-        sample_images = util.load_sample_images(dir)
-        feats = util.load_feats(dir, sample_images, model_name, layer, pool_size, instance_size, instance_stride, mi_type)
+        sample_images = load_sample_images(dir)
+        feats = load_feats(dir, sample_images, model_name, layer, pool_size, instance_size, instance_stride, mi_type)
         multi_feats.update(feats)
         # load rest of data
-        samples, cats, labels = util.load_labels(dir)
-        cats, labels, label_names = util.clean_cats_labels(cats, labels, categories)
+        samples, cats, labels = load_labels(dir)
+        cats, labels, label_names = clean_cats_labels(cats, labels, categories)
         multi_sample_images.update(sample_images)
         multi_samples += list(samples)
         if multi_labels is None:
