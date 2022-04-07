@@ -141,6 +141,6 @@ def load_multi_data(dirs, model_name, layer, pool_size, instance_size, instance_
         if multi_labels is None:
             multi_labels = labels
         else:
-            multi_labels = np.concatenate(multi_labels, labels], axis=0)
+            multi_labels = np.concatenate([multi_labels, labels], axis=0)
 
     return multi_feats, multi_samples, cats, multi_labels, label_names
