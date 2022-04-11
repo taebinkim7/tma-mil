@@ -2,6 +2,18 @@ import csv
 from glob import glob
 import numpy as np
 
+
+def slices(groups):
+    """
+    Generate slices to select
+    groups of the given sizes
+    within a list/matrix
+    """
+    i = 0
+    for group in groups:
+        yield i, i + group
+        i += group
+
 def load_image_list( out_dir ):
 
     img_files = []
@@ -123,11 +135,13 @@ def clean_cats_labels(cats, labels, categories):
 
         return cats, labels, label_names
 
-def load_multi_data(dirs, model_name, layer, pool_size, instance_size, instance_stride, mi_type, categories):
+def load_multi_data(dirs, model_name, layer, pool_size, instance_size, instance_stride, mi_type, categories, return_groups=False):
     multi_feats = {}
     multi_sample_images = {}
     multi_samples = []
     multi_labels = None
+    if return_groups:
+        groups = []
     for dir in dirs:
         # load feats
         sample_images = load_sample_images(dir)
@@ -142,5 +156,10 @@ def load_multi_data(dirs, model_name, layer, pool_size, instance_size, instance_
             multi_labels = labels
         else:
             multi_labels = np.concatenate([multi_labels, labels], axis=0)
+        # store group counts
+        if return_groups:
+            groups.append(len(sample_iamges))
+    if return_groups:
+        return multi_feats, multi_samples, cats, multi_labels, label_names, groups
 
     return multi_feats, multi_samples, cats, multi_labels, label_names

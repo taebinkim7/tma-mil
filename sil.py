@@ -6,17 +6,8 @@ import sklearn.model_selection
 from sklearn.decomposition import PCA
 from linear_classifier import LinearClassifier
 from linear_classifier import balanced_accuracy
+from util import slices
 
-def slices(groups):
-    """
-    Generate slices to select
-    groups of the given sizes
-    within a list/matrix
-    """
-    i = 0
-    for group in groups:
-        yield i, i + group
-        i += group
 
 class SIL(LinearClassifier):
     """Single-Instance Learning applied to MI data."""
