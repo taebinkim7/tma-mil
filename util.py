@@ -158,7 +158,7 @@ def load_multi_data(dirs, model_name, layer, pool_size, instance_size, instance_
             multi_labels = np.concatenate([multi_labels, labels], axis=0)
         # store group counts
         if return_groups:
-            groups.append(len(sample_iamges))
+            groups.append(len(sample_images))
     if return_groups:
         return multi_feats, multi_samples, cats, multi_labels, label_names, groups
 
