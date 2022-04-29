@@ -38,6 +38,8 @@ class ResultsReport:
             print('confusion')
             print(('%s ' * len(self.label_names)) % tuple(self.label_names))
             print(sum(self.res['confusion']))
+            print('Negative / Positive')
+            print(np.sum(self.res['confusion'], axis=1))
 
 
 if __name__ == '__main__':
