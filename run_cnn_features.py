@@ -59,20 +59,31 @@ if __name__ == "__main__":
     elif model_name.lower() == 'inceptionv3':
         from tensorflow.keras.applications.inception_v3 import InceptionV3
         from tensorflow.keras.applications.inception_v3 import preprocess_input
-        base_model = InceptionV3(input_tensor=input_tensor,weights='imagenet')
-    elif model_name.lower() == 'inceptionrenetv2':
+        base_model = InceptionV3(input_tensor=input_tensor,include_top=False,weights='imagenet')
+    elif model_name.lower() == 'inceptionresnetv2':
         from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2
         from tensorflow.keras.applications.inception_resnet_v2 import preprocess_input
-        base_model = InceptionResNetV2(input_tensor=input_tensor,weights='imagenet')
+        base_model = InceptionResNetV2(input_tensor=input_tensor,include_top=False,weights='imagenet')
     elif model_name.lower() == 'xception':
         from tensorflow.keras.applications.xception import Xception
         from tensorflow.keras.applications.xception import preprocess_input
-        base_model = Xception(input_tensor=input_tensor,weights='imagenet')
+        base_model = Xception(input_tensor=input_tensor,include_top=False,weights='imagenet')
+    elif model_name.lower() == 'efficientnetb4':
+        from tensorflow.keras.applications.efficientnet import EfficientNetB4
+        from tensorflow.keras.applications.xception import preprocess_input
+        base_model = EfficientNetB4(input_tensor=input_tensor,include_top=False,weights='imagenet')
+    elif model_name.lower() == 'convnextsmall':
+        from tensorflow.keras.applications.convnext import ConvNeXtSmall
+        from tensorflow.keras.applications.xception import preprocess_input
+        base_model = ConvNeXtSmall(input_tensor=input_tensor,include_top=False,weights='imagenet')
     else:
         print('Error: unsupported model')
         sys.exit(1)
 
-    x = base_model.get_layer(layer).output
+    if layer is None:
+        x = base_model.output
+    else:
+        x = base_model.get_layer(layer).output
 
     # for creating instances
     if pool_size is None and instance_size is None:
@@ -93,8 +104,31 @@ if __name__ == "__main__":
     for img_fn,mask_fn in zip(image_list,mask_list):
         if not os.path.exists( src_dir+img_fn ):
             continue
+
+        # Sanity check--------------------------------------------------------------------------------------------------
+        # print(img_fn)
+
+        if layer is None:
+            feat_fn = out_dir+img_fn[:img_fn.rfind('.')]+'_'+model_name+'-'+'end'
+        else:
+            feat_fn = out_dir+img_fn[:img_fn.rfind('.')]+'_'+model_name+'-'+layer
+        if pool_size is not None:
+            feat_fn += '_p'+str(pool_size)
+        if instance_size is not None:
+            feat_fn += '_i'+str(instance_size)
+            if instance_stride is not None:
+                feat_fn += '-'+str(instance_stride)
+        feat_fn += '.npy'
+
+        if os.path.exists(feat_fn):
+            continue
+
         img = image.load_img( src_dir+img_fn )
         x = image.img_to_array( img )
+        # For TCGA, crop image with dimensions that are multiples of 100
+        w, h = x.shape[:2]
+        w, h = 100 * (w // 100), 100 * (h // 100)
+        x = x[:w, :h, :]
         x = np.expand_dims( x, axis=0 )
         x = preprocess_input( x )
 
@@ -146,14 +180,14 @@ if __name__ == "__main__":
         else:
             print('no instances')
             
-        feat_fn = out_dir+img_fn[:img_fn.rfind('.')]+'_'+model_name+'-'+layer
-        if pool_size is not None:
-            feat_fn += '_p'+str(pool_size)
-        if instance_size is not None:
-            feat_fn += '_i'+str(instance_size)
-            if instance_stride is not None:
-                feat_fn += '-'+str(instance_stride)
-        feat_fn += '.npy'
+        # feat_fn = out_dir+img_fn[:img_fn.rfind('.')]+'_'+model_name+'-'+layer
+        # if pool_size is not None:
+        #     feat_fn += '_p'+str(pool_size)
+        # if instance_size is not None:
+        #     feat_fn += '_i'+str(instance_size)
+        #     if instance_stride is not None:
+        #         feat_fn += '-'+str(instance_stride)
+        # feat_fn += '.npy'
         print('Saving '+feat_fn)
 
         if not os.path.exists( os.path.dirname(feat_fn) ):

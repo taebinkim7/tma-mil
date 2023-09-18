@@ -1,17 +1,14 @@
 import os
 import sys
 import argparse
+import warnings
 import numpy as np
-import sklearn.model_selection
 import sklearn.metrics
 from joblib import dump, load
 
 import util
 from linear_classifier import LinearClassifier
 from sil import SIL
-
-import warnings
-warnings.filterwarnings("ignore")
 
 
 class ResultsReport:
@@ -26,21 +23,24 @@ class ResultsReport:
 
     def print_summary(self, metric=None):
         if metric is None:
-            # for metric in sorted(self.res.keys()):
-            for metric in self.res.keys():
-                if metric != 'confusion':
-                    self.print_summary(metric)
+            print(f"""
+            Accuracy Sensitivity Specificity AUC
+            {np.mean(self.res['acc'])},{np.mean(self.res['sensitivity'])},{np.mean(self.res['specificity'])},{np.mean(self.res['auc'])}
+            """)
             self.print_summary('confusion')
             return
         if metric != 'confusion':
             mean = np.mean(self.res[metric])
             std = np.std(self.res[metric])
-            ste = std / np.sqrt(len(self.res[metric]) - 1) if len(self.res[metric]) > 1 else 0.0
+            ste = std / np.sqrt(len(self.res[metric]) - 1)
             print('%s %f %f %f' % (metric, mean, std, ste))
+
         else:
             print('confusion')
             print(('%s ' * len(self.label_names)) % tuple(self.label_names))
             print(sum(self.res['confusion']))
+            print('Negative / Positive')
+            print(np.sum(sum(self.res['confusion']), axis=1))
 
 
 if __name__ == '__main__':
@@ -102,6 +102,10 @@ if __name__ == '__main__':
     n_jobs = args.n_jobs
     n_components = args.n_components
 
+    if not sys.warnoptions:
+        warnings.simplefilter("ignore")
+        os.environ["PYTHONWARNINGS"] = "ignore"
+
     if calibrate is None:
         calibrate = False
     else:
@@ -130,7 +134,9 @@ if __name__ == '__main__':
     if n_jobs is not None:
         n_jobs = int(n_jobs)
 
-    if random_state is not None:
+    if random_state is None:
+        random_state = 111
+    else:
         random_state = int(random_state)
 
     if n_components is not None:
@@ -174,10 +180,11 @@ if __name__ == '__main__':
         y_test = test_labels[idx_test, c]
 
         # load trained classifier
-        model_path = train_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_i' + str(instance_size) + '-' + str(instance_stride) + '_q' + str(quantiles)
-        if load_train and os.path.exists(model_path):
-            model = load(model_path)
-        elif mi_type is None:
+        # model_path = train_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_i' + str(instance_size) + '-' + str(instance_stride) + '_q' + str(quantiles)
+        # if load_train and os.path.exists(model_path):
+        #     model = load(model_path)
+        # elif mi_type is None:
+        if mi_type is None:
             model = LinearClassifier(n_jobs=n_jobs, **options)
             model.fit(X_train, y_train, calibrate=calibrate, param_search=True)
         elif mi_type in ['median', 'max']:
@@ -220,9 +227,9 @@ if __name__ == '__main__':
         print('accuracy %f auc %f' % (acc, auc))
         print(confusion)
 
-        if save_train:
-            model_path = train_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_i' + str(instance_size) + '-' + str(instance_stride) + '_q' + str(quantiles)
-            dump(model, model_path)
+        # if save_train:
+        #     model_path = train_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_i' + str(instance_size) + '-' + str(instance_stride) + '_q' + str(quantiles)
+        #     dump(model, model_path)
 
         print(f'Train instance size-stride: {instance_size}-{instance_stride}')
         print(f'Test instance size-stride: {instance_size}-{instance_stride}')

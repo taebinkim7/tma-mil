@@ -1,9 +1,10 @@
 import os
 import sys
 import argparse
+import warnings
 import numpy as np
-import sklearn.model_selection
 import sklearn.metrics
+import sksurv.metrics
 from joblib import dump, load
 
 import util
@@ -23,23 +24,67 @@ class ResultsReport:
 
     def print_summary(self, metric=None):
         if metric is None:
+            n_folds = len(self.res['acc'])
+            acc_mean = np.mean(self.res['acc'])
+            acc_sem = np.std(self.res['acc']) / np.sqrt(n_folds)
+            sens_mean = np.mean(self.res['sensitivity'])
+            sens_sem = np.std(self.res['sensitivity']) / np.sqrt(n_folds)
+            spec_mean = np.mean(self.res['specificity'])
+            spec_sem = np.std(self.res['specificity']) / np.sqrt(n_folds)
+            auc_mean = np.mean(self.res['auc'])
+            auc_sem = np.std(self.res['auc']) / np.sqrt(n_folds)
+
+            print("""
+                Accuracy Sensitivity Specificity AUC
+                {:.3f} ({:.3f}) & {:.3f} ({:.3f}) & {:.3f} ({:.3f}) & {:.3f} ({:.3f})
+                """.format(acc_mean, acc_sem, sens_mean, sens_sem, spec_mean, spec_sem, auc_mean, auc_sem))
+            self.print_summary('confusion')
+
+            if c_index:
+                self.print_summary('c_index_continuous')
+                self.print_summary('c_index_binary')
+                # print(f"C-index (continuous): {self.res['c_index_continuous']}")
+                # print(f"C-index (binary): {self.res['c_index_binary']}")
             # for metric in sorted(self.res.keys()):
-            for metric in self.res.keys():
-                if metric != 'confusion':
-                    self.print_summary(metric)
+            # for metric in self.res.keys():
+            #     if metric != 'confusion':
+            #         self.print_summary(metric)
             self.print_summary('confusion')
             return
         if metric != 'confusion':
             mean = np.mean(self.res[metric])
             std = np.std(self.res[metric])
-            ste = std / np.sqrt(len(self.res[metric]) - 1)
+            ste = std / np.sqrt(len(self.res[metric]))
             print('%s %f %f %f' % (metric, mean, std, ste))
+        # def print_summary(self, metric=None):
+        #     if metric is None:
+        #         print(f"""
+        #         Accuracy Sensitivity Specificity AUC
+        #         {np.mean(self.res['acc'])},{np.mean(self.res['sensitivity'])},{np.mean(self.res['specificity'])},{np.mean(self.res['auc'])}
+        #         """)
+        #         if c_index:
+        #             self.print_summary('c_index_continuous')
+        #             self.print_summary('c_index_binary')
+        #             # print(f"C-index (continuous): {self.res['c_index_continuous']}")
+        #             # print(f"C-index (binary): {self.res['c_index_binary']}")
+        #         # for metric in sorted(self.res.keys()):
+        #         # for metric in self.res.keys():
+        #         #     if metric != 'confusion':
+        #         #         self.print_summary(metric)
+        #         self.print_summary('confusion')
+        #         return
+        #     if metric != 'confusion':
+        #         mean = np.mean(self.res[metric])
+        #         std = np.std(self.res[metric])
+        #         ste = std / np.sqrt(len(self.res[metric]) - 1)
+        #         print('%s %f %f %f' % (metric, mean, std, ste))
+
         else:
             print('confusion')
             print(('%s ' * len(self.label_names)) % tuple(self.label_names))
             print(sum(self.res['confusion']))
             print('Negative / Positive')
-            print(np.sum(self.res['confusion'], axis=1))
+            print(np.sum(sum(self.res['confusion']), axis=1))
 
 
 if __name__ == '__main__':
@@ -68,8 +113,12 @@ if __name__ == '__main__':
     parser.add_argument('--cv-lno', help='cross-validation leave n out')
     parser.add_argument('--random-state', help='random state for splitting datasets')
     parser.add_argument('--save-first', action='store_true', help='save first trained classifier and datasets')
+    parser.add_argument('--save-idx', action='store_true', help='save indices of first trained classifier and datasets')
+    parser.add_argument('--c-index', action='store_true', help='c-index for survival analysis')
     parser.add_argument('--n-jobs', help='number of parallel threads')
     parser.add_argument('--n-components', help='number of principal components')
+    parser.add_argument('--save-train', action='store_false', help='save trained classifier')
+    parser.add_argument('--load-train', action='store_false', help='load trained classifier')
     args = parser.parse_args()
     out_dir = args.out_dir
     if len(out_dir) > 1 and out_dir[-1] != '/':
@@ -94,8 +143,16 @@ if __name__ == '__main__':
     cv_lno = args.cv_lno
     random_state = args.random_state
     save_first = args.save_first
+    save_idx = args.save_idx
+    c_index = args.c_index
     n_jobs = args.n_jobs
     n_components = args.n_components
+    save_train = args.save_train
+    load_train = args.load_train
+
+    if not sys.warnoptions:
+        warnings.simplefilter("ignore")
+        os.environ["PYTHONWARNINGS"] = "ignore"
 
     if calibrate is None:
         calibrate = False
@@ -109,19 +166,44 @@ if __name__ == '__main__':
     if agg_type is None:
         agg_type = 'svm'
 
+    if quantiles is None:
+        quantiles = 16
+
     if save_first is None:
         save_first = False
     else:
         save_first = bool(save_first)
 
+    if save_idx is None:
+        save_idx = False
+    else:
+        save_idx = bool(save_idx)
+
+    if c_index is None:
+        c_index = False
+    else:
+        c_index = bool(c_index)
+
     if n_jobs is not None:
         n_jobs = int(n_jobs)
 
-    if random_state is not None:
+    if random_state is None:
+        random_state = 111
+    else:
         random_state = int(random_state)
 
     if n_components is not None:
         n_components = int(n_components)
+
+    if save_train is None:
+        save_train = True
+    else:
+        save_train = bool(save_train)
+
+    if load_train is None:
+        load_train = True
+    else:
+        load_train = bool(load_train)
 
     # load filenames and labels
     sample_images = util.load_sample_images(out_dir)
@@ -219,22 +301,7 @@ if __name__ == '__main__':
             if cv_folds is None:
                 cv_folds = len(samples) // cv_lno
         idx = np.arange(len(samples))
-        if len(label_names) == 1:
-            if cv_lno == 1:
-                skf = sklearn.model_selection.LeaveOneOut()
-            else:
-                skf = sklearn.model_selection.StratifiedKFold(n_splits=cv_folds, shuffle=True,
-                                                              random_state=random_state)
-            idx_train_test = list(skf.split(idx, labels[:, 0]))
-        else:
-            # merge label categories to do stratified folds
-            skf = sklearn.model_selection.StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=random_state)
-            la_all = np.array(labels[:, 0])
-            p = 1
-            for i in range(labels.shape[1]):
-                la_all += labels[:, i] * p
-                p *= len(label_names[i])
-            idx_train_test = list(skf.split(idx, la_all))
+
     else:
         print('Error: train/test split not specified')
         sys.exit(1)
@@ -256,19 +323,50 @@ if __name__ == '__main__':
         options['n_components'] = n_components
 
     for c, cat_name in enumerate(cats):
+        idx = [i for i in idx if (labels[i, c] != -1) & (samples[i] in feats)]
+        labels_subset = labels[idx]
+
+        if len(label_names) == 1:
+            if cv_lno == 1:
+                skf = sklearn.model_selection.LeaveOneOut()
+            else:
+                skf = sklearn.model_selection.StratifiedKFold(n_splits=cv_folds, shuffle=True,
+                                                              random_state=random_state)
+            idx_train_test = list(skf.split(idx, labels_subset[:, c]))
+        else:
+            # merge label categories to do stratified folds
+            skf = sklearn.model_selection.StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=random_state)
+            la_all = np.array(labels_subset[:, c])
+            p = 1
+            for i in range(labels_subset.shape[1]):
+                la_all += labels_subset[:, i] * p
+                p *= len(label_names[i])
+            idx_train_test = list(skf.split(idx, la_all))
+
         print(cat_name)
         res = ResultsReport(label_names[c])
-        nfolds = len(idx_train_test)
         for f, (idx_train, idx_test) in enumerate(idx_train_test):
             print('Fold ' + str(f + 1) + '/' + str(len(idx_train_test)))
-            idx_train = [i for i in idx_train if (labels[i, c] != -1) & (samples[i] in feats)]
-            idx_test = [i for i in idx_test if (labels[i, c] != -1) & (samples[i] in feats)]
+            # idx_train = [i for i in idx_train if (labels[i, c] != -1) & (samples[i] in feats)]
+            # idx_test = [i for i in idx_test if (labels[i, c] != -1) & (samples[i] in feats)]
             # idx_train = idx_train[np.where(labels[idx_train,c] != -1)[0]]
             # idx_test = idx_test[np.where(labels[idx_test,c]!=-1)[0]]
+            idx_train = np.array(idx)[idx_train]
+            idx_test = np.array(idx)[idx_test]
             X_train = [feats[samples[i]] for i in idx_train]
             y_train = labels[idx_train, c]
             X_test = [feats[samples[i]] for i in idx_test]
             y_test = labels[idx_test, c]
+
+            # load trained classifier
+            if mi_type is None:
+                model_path = out_dir + '_' + 'mean' + '_' + classifier + '_' + cat_name + '_i' \
+                             + str(instance_size) + '-' + str(instance_stride) + '_q' + str(quantiles) \
+                             + '_fold' + str(f)
+            else:
+                model_path = out_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_i' \
+                             + str(instance_size) + '-' + str(instance_stride) + '_q' + str(quantiles) \
+                             + '_fold' + str(f)
 
             if sample_weight is not None:
                 # figure out sample weights
@@ -285,6 +383,8 @@ if __name__ == '__main__':
                 counts = counts.sum().astype(float) / (counts * len(counts))
                 sw = np.array([counts[uniq.index(y)] for y in y_sw])
 
+                # if load_train and os.path.exists(model_path):
+                #     model = load(model_path)
                 if mi_type is None:
                     model = LinearClassifier(n_jobs=n_jobs, **options)
                     model.fit(X_train, y_train, calibrate=calibrate, param_search=True, sample_weight=sw)
@@ -298,6 +398,8 @@ if __name__ == '__main__':
                     model.fit(X_train, y_train, calibrate=calibrate, param_search=True, sample_weight=sw)
 
             else:
+                # if load_train and os.path.exists(model_path):
+                #     model = load(model_path)
                 if mi_type is None:
                     model = LinearClassifier(n_jobs=n_jobs, **options)
                     model.fit(X_train, y_train, calibrate=calibrate, param_search=True)
@@ -322,30 +424,51 @@ if __name__ == '__main__':
                 for i in range(p_predict.shape[1]):
                     auc += sklearn.metrics.roc_auc_score(y_test == i, p_predict[:, i])
                 auc /= p_predict.shape[1]
+            if c_index:
+                c_index_continuous = sksurv.metrics.concordance_index_censored(
+                    [True] * len(y_test), y_test, -p_predict[:, 1]
+                )[0]
+                c_index_binary = sksurv.metrics.concordance_index_censored(
+                    [True] * len(y_test), y_test, -y_predict
+                )[0]
             kappa = sklearn.metrics.cohen_kappa_score(y_test, y_predict)
             classes = np.unique(y_train)
             np.sort(classes)
             confusion = sklearn.metrics.confusion_matrix(y_test, y_predict, labels=classes)
             res.add('acc', acc)
-            # res.add('auc',auc)
-            # res.add('kappa',kappa)
+            # res.add('auc', auc)
+            # res.add('kappa', kappa)
             if len(label_names[c]) == 2:
                 res.add('sensitivity',
                         float(np.logical_and(y_test == 1, y_predict == y_test).sum()) / (y_test == 1).sum())
                 res.add('specificity',
                         float(np.logical_and(y_test != 1, y_predict == y_test).sum()) / (y_test != 1).sum())
             res.add('auc', auc)
+            if c_index:
+                res.add('c_index_continuous', c_index_continuous)
+                res.add('c_index_binary', c_index_binary)
             res.add('kappa', kappa)
             res.add('confusion', confusion)
 
             print('accuracy %f auc %f' % (acc, auc))
             print(confusion)
 
-            if save_first:
-                model_path = out_dir + '_' + classifier + '_' + cat_name
-                data_path = out_dir + '_data_' + cat_name + '_random_state_' + str(random_state)
+            if save_train:
                 dump(model, model_path)
-                dump([(X_train, y_train), (X_test, y_test)], data_path)
+
+            if save_first:
+                # model_path = out_dir + '_' + classifier + '_' + cat_name
+                first_model_path = out_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_i' + str(
+                    instance_size) + '-' + str(instance_stride) + '_q' + str(quantiles) + '_first'
+                data_path = out_dir + '_data_' + cat_name + '_random_state_' + str(random_state)
+
+                dump(model, first_model_path)
+                if save_idx:
+                    dump([(np.array(samples)[idx_train], X_train, y_train),
+                          (np.array(samples)[idx_test], X_test, y_test)],
+                         data_path)
+                else:
+                    dump([(X_train, y_train), (X_test, y_test)], data_path)
                 break
 
             if group is not None:
@@ -363,10 +486,10 @@ if __name__ == '__main__':
                     if len(label_names[c]) == 2:
                         res.add('sensitivity ' + group_name,
                                 float(np.logical_and(y_test[idx] == 1, y_predict[idx] == y_test[idx]).sum()) / (
-                                            y_test[idx] == 1).sum())
+                                        y_test[idx] == 1).sum())
                         res.add('specificity ' + group_name,
                                 float(np.logical_and(y_test[idx] != 1, y_predict[idx] == y_test[idx]).sum()) / (
-                                            y_test[idx] != 1).sum())
+                                        y_test[idx] != 1).sum())
                     if len(np.unique(y_train)) == 2:
                         if (y_test[idx] == 0).sum() == 0 or (y_test[idx] == 1).sum() == 0:
                             auc = 0
@@ -384,5 +507,6 @@ if __name__ == '__main__':
                     #     res.add('specificity '+group_name,float( np.logical_and(y_test[idx]!=1, y_predict[idx]==y_test[idx]).sum() ) / (y_test[idx]!=1).sum() )
 
         print(f'Instance size-stride: {instance_size}-{instance_stride}')
+        print(f'Quantiles: {quantiles}')
         print('Cross-validation results')
         res.print_summary()

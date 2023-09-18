@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 import numpy as np
 import matplotlib as mpl
@@ -25,6 +26,10 @@ classifier = args.classifier
 random_state = args.random_state
 level = args.level
 
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+    os.environ["PYTHONWARNINGS"] = "ignore"
+
 data = load(out_dir + '_data_' + cat + '_random_state_' + random_state)
 
 # TODO: add level
@@ -32,7 +37,8 @@ data = load(out_dir + '_data_' + cat + '_random_state_' + random_state)
 #     model = load(out_dir + '_' + classifier + '_' + cat)
 # elif level == 'instance':
 #     model = load(out_dir + '_refitted_' + classifier + '_' + cat)
-model = load(out_dir + '_refitted_' + classifier + '_' + cat)
+# model = load(out_dir + '_refitted_' + classifier + '_' + cat)
+model = load(out_dir + '_' + mi_type + '_' + classifier + '_' + cat_name + '_i' + str(instance_size) + '-' + str(instance_stride) + '_q' + str(quantiles))
 
 (X_train, y_train), (X_test, y_test) = data
 

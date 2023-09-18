@@ -1,17 +1,14 @@
 import os
 import sys
 import argparse
+import warnings
 import numpy as np
-import sklearn.model_selection
 import sklearn.metrics
 from joblib import dump, load
 
 import util
 from linear_classifier import LinearClassifier
 from sil import SIL
-
-import warnings
-warnings.filterwarnings("ignore")
 
 
 class ResultsReport:
@@ -26,21 +23,24 @@ class ResultsReport:
 
     def print_summary(self, metric=None):
         if metric is None:
-            # for metric in sorted(self.res.keys()):
-            for metric in self.res.keys():
-                if metric != 'confusion':
-                    self.print_summary(metric)
+            print(f"""
+            Accuracy Sensitivity Specificity AUC
+            {np.mean(self.res['acc'])},{np.mean(self.res['sensitivity'])},{np.mean(self.res['specificity'])},{np.mean(self.res['auc'])}
+            """)
             self.print_summary('confusion')
             return
         if metric != 'confusion':
             mean = np.mean(self.res[metric])
             std = np.std(self.res[metric])
-            ste = std / np.sqrt(len(self.res[metric]) - 1) if len(self.res[metric]) > 1 else 0.0
+            ste = std / np.sqrt(len(self.res[metric]) - 1)
             print('%s %f %f %f' % (metric, mean, std, ste))
+
         else:
             print('confusion')
             print(('%s ' * len(self.label_names)) % tuple(self.label_names))
             print(sum(self.res['confusion']))
+            print('Negative / Positive')
+            print(np.sum(sum(self.res['confusion']), axis=1))
 
 
 if __name__ == '__main__':
@@ -95,6 +95,10 @@ if __name__ == '__main__':
     load_train = args.load_train
     n_jobs = args.n_jobs
     n_components = args.n_components
+
+    if not sys.warnoptions:
+        warnings.simplefilter("ignore")
+        os.environ["PYTHONWARNINGS"] = "ignore"
 
     if calibrate is None:
         calibrate = False

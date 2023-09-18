@@ -58,7 +58,7 @@ class LinearClassifier(BaseEstimator,ClassifierMixin):
 
         if param_search:
             # search for best hyperparameters
-            self.C,self.gamma = self.param_search( X, y, self.C, self.gamma, sample_weight )
+            self.C, self.gamma = self.param_search( X, y, self.C, self.gamma, sample_weight )
 
         # normalize to zero mean, unit std dev
         self.mu = X.mean(axis=0)
@@ -179,7 +179,9 @@ class LinearClassifier(BaseEstimator,ClassifierMixin):
             Cvals = [1.0]
             gvals = [1.0]
         elif C is None or not quick:
+            ############################################################################################################
             Cvals = [float(2**e) for e in range(-15,10)]
+            # Cvals = [float(2 ** e) for e in [0]]
             if self.kernel == 'rbf':
                 gvals = [float(2**e) for e in range(-20,5)]
             else:
@@ -194,7 +196,8 @@ class LinearClassifier(BaseEstimator,ClassifierMixin):
         # grid search to find best C
         # if metric == 'balanced_accuracy':
         #     metric = balanced_accuracy
-        cv = min(20,min(max((y==0).sum(),(y==-1).sum()),(y==1).sum()))
+        cv = min(20, min(max((y==0).sum(), (y==-1).sum()), (y==1).sum())) ##############################################
+        # cv = min(5, min(max((y == 0).sum(), (y == -1).sum()), (y == 1).sum())) ########################################
         if self.classifier.lower() == 'logistic':
             clf = sklearn.model_selection.GridSearchCV( sklearn.linear_model.LogisticRegression( class_weight=self.class_weight, solver='sag' ), [{'C':Cvals}], cv=cv, scoring=metric, n_jobs=self.n_jobs, refit=False )#, fit_params={'sample_weight':sample_weight} )
         elif self.classifier.lower() == 'svm':
