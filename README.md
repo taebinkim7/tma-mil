@@ -1,4 +1,4 @@
-# tma-mil - Cross-dataset predictions of breast cancer phenotypes by image-based multiple instance learning
+# Cross-dataset predictions of breast cancer phenotypes by image-based multiple instance learning
 
 The methods implemented here include those discussed in the following submission:
 
