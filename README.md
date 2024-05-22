@@ -1,20 +1,10 @@
-# tma-mil - Multiple Instance Learning on Large Images
+# tma-mil - Cross-dataset predictions of breast cancer phenotypes by image-based multiple instance learning
 
-These methods were developed for classifying larger images with intra-image heterogeneity.  The class of each image is not dictated by some small to-be-identified region but by the overall appearance - perhaps the average class of smaller regions or some more complex relationship.
+The methods implemented here include those discussed in the following submission:
 
-Multiple Instance (MI) terminology: All images from a particular sample are referred to as a "bag" and each image region is called an "instance."  A bag can have many instances. Labels are given at the bag level, not the instance level, making this a weakly supervised learning problem.
+T. Kim, B. C. Calhoun, Y. Li, A. Thennavan, M. A. Troester, L. A. Carey, W. F. Symmans, T. O. Nielsen, S. Leung, J. S. Marron, and C. M. Perou, “Cross-dataset predictions of breast cancer phenotypes by image-based multiple instance learning,” npj Breast Cancer, 2024.
 
-With the standard MI assumption, a sample is classiifed as positive if and only if at least one of its instances is positive.  This asymmetric relationship works well for problems such a cancer diagnosis where the presence of even a small region of tumor should produce a prediction of cancer.  For many other applications, it is more appropriate to assign a label to an image based on the properties of multiple regions.  The code tackles such a challenge.
-
-The methods implemented here include those discussed in the following two publications:
-
-H. D. Couture, L. Williams, J. Geradts, S. Nyante, E. Butler, J. Marron, C. Perou, M. Troester, and M. Niethammer, “Image analysis with deep learning to predict breast cancer grade, ER status, histologic subtype, and intrinsic subtype,” npj Breast Cancer, 2018.
-
-H. D. Couture, Discriminative Representations for Heterogeneous Images and Multimodal Data. PhD thesis, Department of Computer Science, University of North Carolina at Chapel Hill, Chapel Hill, NC, 2019.
-
-In the latter, it is the SIL-quantile method of Chapter 2.
-
-This code is not the original used in these publications but an upgraded version to work with the latest version of TensorFlow 2.0 and other libraries. Tested with Python 3.7.3.
+Part of this repository has been adopted from https://github.com/hdcouture/ImageMIL.
 
 ## Setup
 
@@ -35,9 +25,7 @@ in the .bashrc file.
 
 ## Data Setup
 
-The above referenced publications used data from the [Carolina Breast Cancer Study](http://cbcs.web.unc.edu/for-researchers/).  You may apply for access to this data set.
-
-This code was also setup to run on the [BreaKHis](https://web.inf.ufpr.br/vri/databases/breast-cancer-histopathological-database-breakhis/) data set for breast cancer histopathological classification.  A setup file for this data set is included (setup_breakhis.py) that creates the required input files for this code.
+The above referenced publication used several dasets including the one from the [Carolina Breast Cancer Study](http://cbcs.web.unc.edu/for-researchers/).  You may apply for access to this data set.
 
 Running this code requires two files: labels.csv and sample_images.csv.
 
@@ -69,14 +57,6 @@ sample3,test
 sampleN,train
 ```
 
-## Example Usage for BreaKHis
-
-```
-python setup_breakhis.py -i BreaKHis_v1/ -o BreaKHis200/ --mag 200
-python run_cnn_features.py -i BreaKHis_v1/histology_slides/breast/ -o BreaKHis200/ -m vgg16 -l block4_pool --pool-size 5
-python run_mi_classify.py -o BreaKHis200/ -m vgg16 -l block4_pool --cat tumor --cv-fold-files fold* --pool-size 5 --mi median
-```
-
 ## Example Usage for CBCS
 
 ```
@@ -84,21 +64,4 @@ python setup_cbcs.py -i CBCS/images/ -o CBCS_out/ --spreadsheet CBCS.csv
 python run_cnn_features.py -i CBCS/images/ -o CBCS_out/ -m vgg16 -l block4_pool --instance-size 800 --instance-stride 400
 python run_mi_classify.py -o CBCS_out/ -m vgg16 -l block4_pool --cat grade1vs3 --cv-folds 5 --instance-size 800 --instance-stride 400 --mi quantile
 python run_mi_classify.py -o CBCS_out/ -m vgg16 -l block4_pool --cat BasalvsNonBasal,er,ductal_lobular,ror-high --sample-weight grade12vs3 --group grade12vs3 --cv-folds 5 --instance-size 800 --instance-stride 400 --mi quantile
-```
-
-## Citation
-
-If you use this code, please cite:
-
-```
-@article{couture2018image,
-  title={Image analysis with deep learning to predict breast cancer grade, ER status, histologic subtype, and intrinsic subtype},
-  author={Couture, Heather D and Williams, Lindsay A and Geradts, Joseph and Nyante, Sarah J and Butler, Ebonee N and Marron, JS and Perou, Charles M and Troester, Melissa A and Niethammer, Marc},
-  journal={NPJ Breast Cancer},
-  volume={4},
-  number={1},
-  pages={30},
-  year={2018},
-  publisher={Nature Publishing Group}
-}
 ```
