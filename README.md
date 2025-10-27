@@ -2,7 +2,7 @@
 
 The methods implemented here include those discussed in the following submission:
 
-T. Kim, B. C. Calhoun, Y. Li, A. Thennavan, M. A. Troester, L. A. Carey, W. F. Symmans, T. O. Nielsen, S. Leung, J. S. Marron, and C. M. Perou, “Cross-dataset predictions of breast cancer phenotypes by image-based multiple instance learning,” npj Breast Cancer, 2024.
+T. Kim, B. C. Calhoun, Y. Li, A. Thennavan, M. A. Troester, L. A. Carey, W. F. Symmans, T. O. Nielsen, S. Leung, J. S. Marron, and C. M. Perou, “Cross-dataset predictions of breast cancer phenotypes by image-based multiple instance learning,” Submitted.
 
 Part of this repository has been adopted from https://github.com/hdcouture/ImageMIL.
 
